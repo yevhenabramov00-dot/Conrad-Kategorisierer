@@ -53,19 +53,10 @@ jobs:
           path: dist/ConradKategorisierer.exe
 
 # ---------------------------------------------------------------------------
-# macOS — .app bundle via PyInstaller --windowed --onedir
+# macOS — .app bundle via PyInstaller --windowed --onedir (Intel x86_64)
 # ---------------------------------------------------------------------------
   build-macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: macos-latest        # Apple Silicon (arm64)
-            arch: AppleSilicon
-          - runner: macos-13            # Intel (x86_64)
-            arch: Intel
-
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-15-intel
 
     steps:
       - name: Checkout
@@ -81,7 +72,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Build macOS application
+      - name: Build macOS application (Intel)
         run: >
           pyinstaller
           --noconfirm
@@ -89,7 +80,7 @@ jobs:
           --windowed
           --onedir
           --name ConradKategorisierer
-          --icon "assets/app_icon.png"
+          --icon "assets/app_icon.icns"
           --add-data "assets:assets"
           --add-data "ui:ui"
           --add-data "categorizer:categorizer"
@@ -101,10 +92,10 @@ jobs:
         run: |
           ditto -c -k --sequesterRsrc --keepParent \
             "dist/ConradKategorisierer.app" \
-            "dist/ConradKategorisierer-${{ matrix.arch }}.zip"
+            "dist/ConradKategorisierer-macOS-Intel.zip"
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ConradKategorisierer-macOS-${{ matrix.arch }}
-          path: dist/ConradKategorisierer-${{ matrix.arch }}.zip
+          name: ConradKategorisierer-macOS-Intel
+          path: dist/ConradKategorisierer-macOS-Intel.zip
