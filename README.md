@@ -2,6 +2,8 @@
 
 **Professionelle Desktop-Anwendung zur automatischen Kategorie-Zuordnung für Conrad.de Produktlisten.**
 
+<img width="1312" height="900" alt="Снимок экрана 2026-11-17 в 22 17 22" src="https://github.com/user-attachments/assets/7ffcbec8-0849-4747-9fa8-035441bed83e" />
+
 ---
 
 ## Funktionsumfang
