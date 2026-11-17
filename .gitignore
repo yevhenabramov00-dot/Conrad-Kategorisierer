@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Output / temporary Excel files
+*_categorized.xlsx
+test_*.xlsx
