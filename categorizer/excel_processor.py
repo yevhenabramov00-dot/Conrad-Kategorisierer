@@ -72,10 +72,10 @@ def process_file(
     name_col = col_map.get("Name", 37)
     ean_col = col_map.get("Product.EAN.Main", 40)
     mpn_col = col_map.get(
-        "BrandReference",
+        "ATT.GLOBAL.ManufacturerAID",
         col_map.get(
-            "ATT.GLOBAL.ManufacturerAID",
-            col_map.get("Product.Supplier.ArticleID", 42),
+            "Product.Supplier.ArticleID",
+            col_map.get("ATT.GLOBAL.ManufacturerTypeDesc", 43),
         ),
     )
 

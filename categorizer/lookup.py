@@ -1,3 +1,4 @@
+
 """
 categorizer/lookup.py
 ---------------------
@@ -7,6 +8,8 @@ Pure business logic – no UI dependencies.
 
 import re
 import json
+import time
+import random
 import urllib.request
 import urllib.parse
 
@@ -14,17 +17,22 @@ MANUAL_FALLBACK_TEXT = "Manuell pflegen"
 
 # Domain keyword matching rules for high-confidence fallback
 KEYWORD_RULES = [
+    (r"\b(auftragstasche|werkstatt-auftragstasche)\b", "2700480", "Werkstatt-Auftragstaschen"),
+    (r"\b(flachrundzange)\b", "1517028", "Flachrundzangen"),
     (r"\b(wechselbit|bit-stecknuss|bit-set|bitset|bitsatz)\b", "1512020", "Bit-Sets"),
     (r"\b(schnell-ladegerät|ladepad|ladegerät)\b", "0502019", "Ladegeräte & Ladepads"),
-    (r"\b(akku)\b.*\b(18v|li-ion|batterie)\b", "0501040", "Werkzeug-Akkus"),
+    (r"\b(emonster.*akku|akku.*werkzeug)\b", "1506057", "Werkzeug-Akkus"),
+    (r"\b(akku)\b.*\b(18v|li-ion|batterie)\b", "1506057", "Werkzeug-Akkus"),
     (r"\b(drehmomentschlüssel|reparatursatz.*drehmoment)\b", "0312024", "Drehmomentschlüssel"),
     (r"\b(druckluft-schlagschrauber|schlagschrauber)\b", "1517983", "Druckluft-Schlagschrauber"),
+    (r"\b(offener.*ringschlüssel|gelenkschlüssel)\b", "1515110", "Offene Ringschlüssel"),
     (r"\b(steckschlüssel|ringschlüssel|schraubenschlüssel-satz)\b", "1502030", "Steckschlüssel & Schraubenschlüssel"),
-    (r"\b(flachrundzange|kombizange|zangen?)\b", "1502010", "Zangen"),
+    (r"\b(kombizange|zangen?)\b", "1502010", "Zangen"),
     (r"\b(winkelstiftschlüssel|stiftschlüssel|torx-schlüssel)\b", "1502021", "Winkelstiftschlüssel"),
-    (r"\b(auftragstasche|schloß|laufrollensatz|laufschienen|rollbrett|liege|magnethalter)\b", "1504060", "Werkstatteinrichtung"),
+    (r"\b(lkw-radmutternschlüssel|radmutternschlüssel)\b", "0312023", "Radmutternschlüssel"),
+    (r"\b(felgenschlüssel|rangierer|the minidevil)\b", "0312020", "Reifen & Radwerkzeuge"),
+    (r"\b(schloß|laufrollensatz|laufschienen|rollbrett|liege|magnethalter)\b", "1504060", "Werkstatteinrichtung"),
     (r"\b(reifenmontagepaste|montagepaste)\b", "0312068", "Reifenmontagepaste"),
-    (r"\b(radmutternschlüssel|felgenschlüssel|rangierer|the minidevil)\b", "0312020", "Reifen & Radwerkzeuge"),
     (r"\b(injektoren|lecksuche|nebelmaschine|videoskop)\b", "0312070", "KFZ-Diagnose & Lecksuche"),
     (r"\b(motorbrücke|riemenscheiben|kupplungs.*de-und|zapfenschlüssel)\b", "0312026", "KFZ-Motorwerkzeuge"),
     (r"\b(bremsleitungs|prüflampe|bordnetz-spannungserhalter|sicherung.*500a)\b", "0812022", "Bremsen & KFZ-Elektrik"),
@@ -52,11 +60,13 @@ def conrad_search(query: str) -> list[dict]:
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/120.0.0.0 Safari/537.36"
+            "Chrome/124.0.0.0 Safari/537.36"
         ),
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "de-DE,de;q=0.9,en;q=0.8",
     }
+    # Rate limit: polite delay to prevent aggressive bot triggering
+    time.sleep(random.uniform(1.2, 2.5))
     try:
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req, timeout=8) as response:
@@ -121,67 +131,53 @@ def conrad_search(query: str) -> list[dict]:
 
 def match_product(
     name: str,
-    brand_ref: str,
-    ean: str,
-    cache: dict,
+    brand_ref: str = "",
+    ean: str = "",
+    cache: dict | None = None,
 ) -> tuple[str | None, str | None, str]:
     """
-    Attempt to find a Conrad category for a product.
+    Attempt to find a Conrad category for a product purely by product name.
 
     Returns (category_id, category_name, url).
     category_id is None when no match was found.
     Leading zeros are preserved via zfill(7).
     """
-    # 1. Local cache
-    for key in [ean, brand_ref, name]:
-        if key and key in cache:
-            return (
-                cache[key],
-                "Lokaler Cache",
-                f"https://www.conrad.de/de/o/-{cache[key]}.html",
-            )
+    if cache is None:
+        cache = {}
 
-    # 2. EAN search
-    if ean and len(str(ean).strip()) >= 8:
-        cands = conrad_search(str(ean).strip())
-        if cands:
-            cid = cands[0]["category_id"].zfill(7)
-            cache[ean] = cid
-            return cid, cands[0]["category_name"], cands[0]["url"]
+    clean_name = name.strip() if name else ""
+    if not clean_name:
+        return None, None, "https://www.conrad.de"
 
-    # 3. Brand reference / MPN search
-    if brand_ref and len(str(brand_ref).strip()) >= 3:
-        cands = conrad_search(str(brand_ref).strip())
-        if cands:
-            cid = cands[0]["category_id"].zfill(7)
-            cache[brand_ref] = cid
-            return cid, cands[0]["category_name"], cands[0]["url"]
+    # 1. Local cache (strictly by product name, never by brand)
+    if clean_name in cache:
+        cid = cache[clean_name]
+        return (
+            cid,
+            "Lokaler Cache",
+            f"https://www.conrad.de/de/o/-{cid}.html",
+        )
 
-    # 4. Keyword rules
-    if name:
-        lower_name = name.lower()
-        for pattern, cid, cname in KEYWORD_RULES:
-            if re.search(pattern, lower_name):
-                cid_str = cid.zfill(7)
-                if ean:
-                    cache[ean] = cid_str
-                if brand_ref:
-                    cache[brand_ref] = cid_str
-                return cid_str, cname, f"https://www.conrad.de/de/o/-{cid_str}.html"
+    # 2. Domain keyword matching rules on product name
+    lower_name = clean_name.lower()
+    for pattern, cid, cname in KEYWORD_RULES:
+        if re.search(pattern, lower_name):
+            cid_str = cid.zfill(7)
+            cache[clean_name] = cid_str
+            return cid_str, cname, f"https://www.conrad.de/de/o/-{cid_str}.html"
 
-    # 5. Title-word search
-    if name:
-        clean_title = re.sub(r'[,/()"\']', " ", name)
-        words = [w for w in clean_title.split() if len(w) > 2][:4]
-        q_title = " ".join(words)
+    # 3. Product title search on Conrad.de
+    clean_title = re.sub(r'[,/()"\']', " ", clean_name)
+    words = [w for w in clean_title.split() if len(w) > 2][:4]
+    q_title = " ".join(words)
+    if q_title:
         cands = conrad_search(q_title)
         if cands:
             cid = cands[0]["category_id"].zfill(7)
-            if ean:
-                cache[ean] = cid
+            cache[clean_name] = cid
             return cid, cands[0]["category_name"], cands[0]["url"]
 
     fallback_url = "https://www.conrad.de/de/search.html?search=" + urllib.parse.quote(
-        name or ""
+        clean_name
     )
     return None, None, fallback_url
