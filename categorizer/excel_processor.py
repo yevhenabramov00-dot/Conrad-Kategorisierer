@@ -61,15 +61,48 @@ def process_file(
     )
     ws = wb[sheet_name]
 
-    # Dynamic column discovery from header row
+    # Adaptive header discovery: search rows 1 to 6
+    header_row = 1
     col_map: dict[str, int] = {}
-    for col_idx in range(1, ws.max_column + 1):
-        val = ws.cell(row=1, column=col_idx).value
-        if val:
-            col_map[str(val).strip()] = col_idx
+    for r in range(1, 7):
+        row_vals = {
+            str(ws.cell(row=r, column=c).value or "").strip(): c
+            for c in range(1, ws.max_column + 1)
+            if ws.cell(row=r, column=c).value
+        }
+        if "Parent" in row_vals or "Efeu" in row_vals or "Name" in row_vals:
+            header_row = r
+            col_map = row_vals
+            break
 
-    parent_col = col_map.get("Parent", 4)
-    name_col = col_map.get("Name", 37)
+    # Resolve Parent column (category ID)
+    parent_col = col_map.get("Parent", col_map.get("Efeu"))
+    if not parent_col:
+        for c in (4, 3, 2, 5):
+            for test_r in range(header_row + 1, min(header_row + 10, ws.max_row + 1)):
+                val = str(ws.cell(row=test_r, column=c).value or "").strip()
+                if val.isdigit() and len(val) == 7:
+                    parent_col = c
+                    break
+            if parent_col:
+                break
+    if not parent_col:
+        parent_col = 4
+
+    # Resolve Name column (product title)
+    name_col = col_map.get("Name", col_map.get("Produkt-Kurzbezeichnung"))
+    if not name_col:
+        for c in range(25, min(45, ws.max_column + 1)):
+            for test_r in range(header_row + 1, min(header_row + 10, ws.max_row + 1)):
+                val = str(ws.cell(row=test_r, column=c).value or "").strip()
+                if len(val) > 8 and not val.isdigit() and not val.startswith("Brand."):
+                    name_col = c
+                    break
+            if name_col:
+                break
+    if not name_col:
+        name_col = 37
+
     ean_col = col_map.get("Product.EAN.Main", 40)
     mpn_col = col_map.get(
         "ATT.GLOBAL.ManufacturerAID",
@@ -79,14 +112,13 @@ def process_file(
         ),
     )
 
-    start_row = 8
-    max_row = ws.max_row
-    valid_rows = [
-        r
-        for r in range(start_row, max_row + 1)
-        if ws.cell(row=r, column=name_col).value
-        and str(ws.cell(row=r, column=name_col).value).strip()
-    ]
+    # Ignore template instructions rows
+    instruction_markers = ("produkt-kurz", "max. 40", "zeichen", "conrad muster")
+    valid_rows = []
+    for r in range(header_row + 1, ws.max_row + 1):
+        raw_name = str(ws.cell(row=r, column=name_col).value or "").strip()
+        if raw_name and not any(m in raw_name.lower() for m in instruction_markers):
+            valid_rows.append(r)
 
     total = len(valid_rows)
     matched = 0

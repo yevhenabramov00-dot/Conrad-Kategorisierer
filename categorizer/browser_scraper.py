@@ -85,10 +85,11 @@ def _extract_categories_from_page(page) -> list[dict]:
 def search_on_conrad(
     product_name: str,
     page,
-    delay_range: tuple[float, float] = (1.5, 3.0),
+    delay_range: tuple[float, float] = (2.2, 4.0),
 ) -> list[dict]:
     """
     Search a single product name on Conrad.de using an already-open browser page.
+    Takes deliberate pacing (2.2 - 4.0s) for high accuracy and bot safety.
     Returns list of matching categories, most relevant first.
     """
     query = product_name.strip()

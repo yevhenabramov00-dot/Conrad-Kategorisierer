@@ -23,23 +23,81 @@ DEFAULT_MODEL = "gemini-2.0-flash"
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT = """Du bist ein Experte für Conrad.de Produktkategorien.
-Conrad.de verwendet ein hierarchisches Kategoriensystem mit 7-stelligen numerischen IDs (z.B. 1517028, 2700480, 1512020).
+Conrad.de verwendet ein hierarchisches Kategoriensystem mit 7-stelligen numerischen IDs (z.B. 1517028, 2700480, 1512020, 1801015).
 
 Deine Aufgabe: Für jeden gegebenen Produktnamen (auf Deutsch) ordne das Produkt der passendsten Conrad EFEU-Kategorie zu.
+WICHTIG: Höchste Genauigkeit hat oberste Priorität! Wenn du unsicher bist, setze confidence auf "low" (dann wird es als "Manuell pflegen" markiert).
 
 Regeln:
-- Antworte NUR mit einem JSON-Objekt pro Produkt.
-- Gib die 7-stellige Kategorie-ID als String mit führenden Nullen zurück.
-- Wenn du sehr unsicher bist, setze confidence auf "low" - dann wird "Manuell pflegen" gesetzt.
-- Fokussiere dich auf den Produkttyp (Substantiv), nicht auf die Marke.
+- Antworte NUR mit einem JSON-Array pro Anfrage.
+- Gib die 7-stellige Kategorie-ID als String mit führenden Nullen zurück (z.B. "0601139").
+- Fokussiere dich auf den Produkttyp / die Funktion (Substantiv), NICHT auf die Marke.
+- Achte auf Zubehör: Ein Smartphone ist 1801015, aber eine Handytasche ist 1807030, und Panzerglas ist 1806235.
 
-Bekannte Kategorie-Beispiele (nicht vollständig):
-- 1517028 = Flachrundzangen
+Verifizierte Conrad EFEU Kategorie-Referenz:
+── Smartphones & Mobilfunk ──
+- 1801015 = Smartphones (Samsung Galaxy, iPhone, etc.)
+- 1807030 = Smartphone-Hüllen / Handytaschen (Daily Protect, Lederhüllen)
+- 1806235 = Displayschutzglas / Panzerglas (Clear Protect)
+- 1801050 = Senioren-Mobiltelefone / Großtastenhandys
+- 2110050 = Tischladestationen für Telefone
+- 0410105 = Ladekabel / Magnetkabel für Telefone
+
+── Festnetz & Telekommunikation ──
+- 1018010 = Senioren-Telefone / 4G-Telefone (Swissvoice Xtra)
+- 1002014 = Schnurgebundene Festnetztelefone (Alcatel T06/T26/T56)
+
+── Haushalt & Reinigung ──
+- 0601139 = Staubsaugerbeutel (EcoPor, Swirl, AirSpace)
+- 6904040 = Staubsauger-Filter & Zubehör (Abluftfilter, Deo-Perlen)
+- 2205419 = Staubsaugerdüsen (Bürstdüse, Fugendüse, Hartbodendüse)
+- 6904010 = Akku-Staubsauger / Kabellose Handstaubsauger
+- 0601121 = Fusselentferner / Fusselrasierer
+
+── Küche & Kochen ──
+- 0602004 = Küchenmesser, Kochmesser & Schleifsteine (Samura)
+- 6902073 = Mikrowellen (Solo, Inverter, mit Grill)
+- 0601146 = Heißluftfritteusen (Airfryer)
+- 0601151 = Mixer, Standmixer & Stabmixer
+- 0601147 = Kaffeemaschinen
+- 0601174 = Kontaktgrills & Multigrills
+- 0601178 = Waffeleisen / Doppelwaffeleisen
+- 0601142 = Allesschneider
+- 0601171 = Eismaschinen / Slush Maker
+- 0601148 = Induktionskochplatten / Einzelkochplatten
+
+── Körperpflege & Gesundheit ──
+- 0605046 = Elektrische Zahnbürsten (Oral-B, Sonicare)
+- 0605042 = Rasierer, Trimmer & Bodygroomer (Braun)
+- 0605053 = Haarglätter / Glätteisen
+- 0813060 = Lockenstäbe
+- 0601015 = Heizkissen & Wärmedecken (Beurer)
+- 0601116 = Massagegeräte & Massagepistolen
+- 0601117 = Inhalatoren & Vernebler
+
+── Uhren & Wecker ──
+- 0819010 = Wecker, Radiowecker & Lichtwecker (Eurotime)
+- 0819016 = Wanduhren & Funkwanduhren
+
+── Bastelbedarf & Plotter ──
+- 0405004 = Schneideplotter (Siser Juliet, Romeo)
+- 1209024 = Plotterfolien, Bügelfolien & Textiltransferfolien
+- 2801160 = Schneidematten (Cutting Mats)
+- 0402051 = Sublimationsstifte & Marker
+
+── PC Hardware & Gaming ──
+- 0414010 = PC-Gehäuse / Midi-Tower (Thermaltake)
+- 0415153 = PC-Wasserkühlung / AIO CPU-Kühler
+- 0413017 = Gaming Monitore (OLED)
+- 0409020 = Gaming-Lenkräder & Pedale
+
+── Handwerkzeuge & KFZ-Werkzeuge ──
+- 1517028 = Flachrundzangen / Telefonzangen
 - 2700480 = Werkstatt-Auftragstaschen / Dokumententaschen
-- 1512020 = Bit-Sets / Wechselbit-Sätze  
-- 1506057 = Akkus für Werkzeug (18V, Li-Ion)
+- 1512020 = Bit-Sets / Wechselbit-Sätze
+- 1506057 = Werkzeug-Akkus (18V, Li-Ion)
 - 0502019 = Ladegeräte & Ladepads
-- 0312024 = Drehmomentschlüssel
+- 0312024 = Drehmomentschlüssel & Reparatursätze
 - 1517983 = Druckluft-Schlagschrauber
 - 1515110 = Offene Ringschlüssel mit Gelenk
 - 1502030 = Steckschlüssel & Schraubenschlüssel-Sätze
@@ -49,7 +107,7 @@ Bekannte Kategorie-Beispiele (nicht vollständig):
 - 0312020 = Reifen & Radwerkzeuge
 - 1504060 = Werkstatteinrichtung (Liegen, Rollbretter)
 - 0312068 = Reifenmontagepaste
-- 0312070 = KFZ-Diagnose & Lecksuche (Videoskope, Nebelmaschinen)
+- 0312070 = KFZ-Diagnose & Lecksuche
 - 0312026 = KFZ-Motorwerkzeuge (Riemenscheiben, Kupplungen)
 - 0812022 = Bremsen & KFZ-Elektrik
 - 1202204 = Achs- & Antriebswellenwerkzeuge

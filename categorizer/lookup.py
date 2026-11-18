@@ -17,6 +17,7 @@ MANUAL_FALLBACK_TEXT = "Manuell pflegen"
 
 # Domain keyword matching rules for high-confidence fallback
 KEYWORD_RULES = [
+    # ── Handwerkzeuge & Werkstatt (KS Tools) ───────────────
     (r"\b(auftragstasche|werkstatt-auftragstasche)\b", "2700480", "Werkstatt-Auftragstaschen"),
     (r"\b(flachrundzange)\b", "1517028", "Flachrundzangen"),
     (r"\b(wechselbit|bit-stecknuss|bit-set|bitset|bitsatz)\b", "1512020", "Bit-Sets"),
@@ -44,6 +45,62 @@ KEYWORD_RULES = [
     (r"\b(ersatzmesser|klingen)\b", "1517032", "Ersatzklingen"),
     (r"\b(cob-taschenlampe|taschenlampe)\b", "0312040", "Arbeitsleuchten & Taschenlampen"),
     (r"\b(feuerzeug)\b", "3300200", "Feuerzeuge"),
+
+    # ── Smartphones & Zubehör (Schutzglas & Hüllen IMMER vor Smartphone!) ──
+    (r"\b(schutzglas|panzerglas|clear protect|displayschutz|kameraschutz|cam protect)\b", "1806235", "Displayschutzglas"),
+    (r"\b(handytasche|handyhülle|smartphone-hülle|booklet|cover|case\b|daily protect|extreme protect|slim protect|fantastic feel)\b", "1807030", "Handytaschen & Schutzhüllen"),
+    (r"\b(magnetkabel|ladekabel.*case|nomad case)\b", "0410105", "Ladekabel & Magnetkabel"),
+    (r"\b(tischladestation|ladestation.*telefon)\b", "2110050", "Telefon-Ladestationen"),
+    (r"\b(seniorenhandy|großtastenhandy|amplibase)\b", "1801050", "Senioren-Mobiltelefone"),
+    (r"\b(iphone|galaxy\s+s2[0-9]|smartphone)\b", "1801015", "Smartphones"),
+
+    # ── Festnetz & Telekommunikation (Spezifisch vor Allgemein!) ──
+    (r"\b(schnurgebundenes festnetztelefon|schnurtelefon|schnurgebunden)\b", "1002014", "Schnurgebundene Festnetztelefone"),
+    (r"\b(festnetztelefon|seniorentelefon|xtra 4g|xtra 2355)\b", "1018010", "Senioren- & 4G-Telefone"),
+
+    # ── Haushalt, Saugen & Reinigen ────────────────────────
+    (r"\b(staubsaugerbeutel|ecopor|airspace)\b", "0601139", "Staubsaugerbeutel"),
+    (r"\b(abluftfilter.*staubsauger|deo perlen.*staubsauger|staubsaugerfilter)\b", "6904040", "Staubsaugerfilter & Zubehör"),
+    (r"\b(bürstdüse|fugenreinigungsdüse|hartbodendüse|fussel.*entfernungsdüse)\b", "2205419", "Staubsaugerdüsen"),
+    (r"\b(akku staubsauger|kabelloser.*staubsauger|handstaubsauger)\b", "6904010", "Akku-Staubsauger"),
+    (r"\b(fusselentferner|fusselrasierer)\b", "0601121", "Fusselentferner"),
+
+    # ── Küche & Kochen (Severin, Samura) ───────────────────
+    (r"\b(kochmesser|schleifstein|messerwinkelhalter|santokumesser)\b", "0602004", "Küchenmesser & Schleifzubehör"),
+    (r"\b(mikrowelle)\b", "6902073", "Mikrowellen"),
+    (r"\b(heißluftfritteuse|s-fry|airfryer)\b", "0601146", "Heißluftfritteusen"),
+    (r"\b(smoothie mixer|stabmixer|standmixer)\b", "0601151", "Mixer & Stabmixer"),
+    (r"\b(kaffeemaschine)\b", "0601147", "Kaffeemaschinen"),
+    (r"\b(multigrill|kontaktgrill)\b", "0601174", "Kontaktgrills & Multigrills"),
+    (r"\b(waffeleisen|duo-waffeleisen)\b", "0601178", "Waffeleisen"),
+    (r"\b(allesschneider)\b", "0601142", "Allesschneider"),
+    (r"\b(slush|ice cream maker|eismaschine)\b", "0601171", "Eismaschinen"),
+    (r"\b(induktionskochplatte|einzelkochplatte)\b", "0601148", "Induktionskochplatten"),
+
+    # ── Körperpflege & Gesundheit (Braun, Oral-B, Philips) ──
+    (r"\b(zahnbürste|oral-b|sonicare|schallzahnbürste)\b", "0605046", "Elektrische Zahnbürsten"),
+    (r"\b(bodygroomer|haarschneider|barttrimmer|rasierer)\b", "0605042", "Rasierer & Haarschneider"),
+    (r"\b(glätteisen|haarglätter)\b", "0605053", "Haarglätter"),
+    (r"\b(lockenstab)\b", "0813060", "Lockenstäbe"),
+    (r"\b(heizkissen|wärmekissen|wärmedecke)\b", "0601015", "Heizkissen & Wärmedecken"),
+    (r"\b(massagepistole|massagegerät)\b", "0601116", "Massagegeräte"),
+    (r"\b(inhalator|vernebler)\b", "0601117", "Inhalatoren"),
+
+    # ── Uhren & Wecker (Eurotime) ──────────────────────────
+    (r"\b(wecker|radiowecker|wake up)\b", "0819010", "Wecker & Radiowecker"),
+    (r"\b(funkwanduhr|wanduhr)\b", "0819016", "Wanduhren & Funkuhren"),
+
+    # ── Bastelbedarf & Plotter (Siser) ─────────────────────
+    (r"\b(schneideplotter|plotter\b)\b", "0405004", "Schneideplotter"),
+    (r"\b(plotterfolie|bügelfolie|textiltransfer|crafty pocket|easyweed)\b", "1209024", "Plotterfolien & Textiltransfer"),
+    (r"\b(cutting mat|schneidematte)\b", "2801160", "Schneidematten"),
+    (r"\b(sublimation marker|sublimationsstift)\b", "0402051", "Sublimationsstifte"),
+
+    # ── PC Hardware & Gaming (Thermaltake) ─────────────────
+    (r"\b(pc-gehäuse|midi-tower|tg argb)\b", "0414010", "PC-Gehäuse"),
+    (r"\b(aio.*kühler|wasserkühlung|wasserkühler)\b", "0415153", "PC-Wasserkühlung"),
+    (r"\b(gaming monitor|oled.*monitor)\b", "0413017", "Gaming Monitore"),
+    (r"\b(racing wheel|pedals damper)\b", "0409020", "Gaming-Lenkräder & Pedale"),
 ]
 
 
