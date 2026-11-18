@@ -121,6 +121,7 @@ def process_file(
             valid_rows.append(r)
 
     total = len(valid_rows)
+    max_row = ws.max_row
     matched = 0
     manual = 0
     skipped = 0
