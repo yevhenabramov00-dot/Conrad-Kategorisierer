@@ -134,12 +134,19 @@ def match_product(
     brand_ref: str = "",
     ean: str = "",
     cache: dict | None = None,
+    gemini_api_key: str = "",
 ) -> tuple[str | None, str | None, str]:
     """
     Attempt to find a Conrad category for a product purely by product name.
 
+    Pipeline (in order):
+      1. Local name cache
+      2. Domain keyword rules
+      3. Conrad.de urllib search (best-effort, may be blocked)
+      4. Gemini AI classification (if api_key is provided)
+
     Returns (category_id, category_name, url).
-    category_id is None when no match was found.
+    category_id is None when no match was found → "Manuell pflegen".
     Leading zeros are preserved via zfill(7).
     """
     if cache is None:
@@ -149,7 +156,7 @@ def match_product(
     if not clean_name:
         return None, None, "https://www.conrad.de"
 
-    # 1. Local cache (strictly by product name, never by brand)
+    # 1. Local cache (keyed strictly by product name)
     if clean_name in cache:
         cid = cache[clean_name]
         return (
@@ -158,7 +165,7 @@ def match_product(
             f"https://www.conrad.de/de/o/-{cid}.html",
         )
 
-    # 2. Domain keyword matching rules on product name
+    # 2. Domain keyword matching rules
     lower_name = clean_name.lower()
     for pattern, cid, cname in KEYWORD_RULES:
         if re.search(pattern, lower_name):
@@ -166,7 +173,7 @@ def match_product(
             cache[clean_name] = cid_str
             return cid_str, cname, f"https://www.conrad.de/de/o/-{cid_str}.html"
 
-    # 3. Product title search on Conrad.de
+    # 3. Conrad.de urllib search (may return empty if site blocks request)
     clean_title = re.sub(r'[,/()"\']', " ", clean_name)
     words = [w for w in clean_title.split() if len(w) > 2][:4]
     q_title = " ".join(words)
@@ -176,6 +183,18 @@ def match_product(
             cid = cands[0]["category_id"].zfill(7)
             cache[clean_name] = cid
             return cid, cands[0]["category_name"], cands[0]["url"]
+
+    # 4. Gemini AI fallback (only when API key is configured)
+    if gemini_api_key:
+        try:
+            from categorizer.gemini_classifier import classify_single
+            cid, cname = classify_single(0, clean_name, gemini_api_key)
+            if cid:
+                cid_str = cid.zfill(7)
+                cache[clean_name] = cid_str
+                return cid_str, f"🤖 {cname}", f"https://www.conrad.de/de/o/-{cid_str}.html"
+        except Exception:
+            pass
 
     fallback_url = "https://www.conrad.de/de/search.html?search=" + urllib.parse.quote(
         clean_name

@@ -35,6 +35,7 @@ def process_file(
     on_progress: Callable[[int, int, int, int], None],
     on_status: Callable[[str], None],
     stop_flag: Callable[[], bool],
+    gemini_api_key: str = "",
 ) -> dict:
     """
     Load *in_file*, categorize every product row, write *out_file*.
@@ -51,7 +52,6 @@ def process_file(
     """
     if not OPENPYXL_AVAILABLE:
         raise RuntimeError("openpyxl ist nicht installiert.")
-
     on_status("Öffne Excel-Datei…")
     wb = openpyxl.load_workbook(in_file)
     sheet_name = (
@@ -113,7 +113,7 @@ def process_file(
             cat_name_text = "Vorhanden"
         else:
             on_status(f"Verarbeite Zeile {r}/{max_row}: {name_val[:45]}…")
-            cat_id, cat_name, _ = match_product(name_val, mpn_val, ean_val, cache)
+            cat_id, cat_name, _ = match_product(name_val, cache=cache, gemini_api_key=gemini_api_key)
             parent_cell.number_format = FORMAT_TEXT  # preserve leading zeros
 
             if cat_id:

@@ -358,6 +358,48 @@ QLineEdit::placeholder {{
 QFrame[frameShape="4"], QFrame[frameShape="5"] {{
     color: {t.border};
 }}
+#Separator {{
+    color: {t.border};
+    max-height: 1px;
+    background: {t.border};
+}}
+
+/* ── Settings / API key ──────────────────────────────────── */
+#SettingsLabel {{
+    font-size: 11px;
+    font-weight: 600;
+    color: {t.text3};
+    letter-spacing: 0.4px;
+}}
+#SettingsCheck {{
+    font-size: 12px;
+    color: {t.text2};
+    background: transparent;
+    spacing: 6px;
+}}
+#SettingsCheck::indicator {{
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 1px solid {t.border};
+    background: {t.surface2};
+}}
+#SettingsCheck::indicator:checked {{
+    background-color: {t.accent};
+    border-color: {t.accent};
+}}
+#ApiKeyEdit {{
+    background-color: {t.surface2};
+    border: 1px solid {t.border};
+    border-radius: 6px;
+    padding: 5px 8px;
+    color: {t.text};
+    font-size: 11px;
+    font-family: "SF Mono", "Consolas", monospace;
+}}
+#ApiKeyEdit:focus {{
+    border-color: {t.accent};
+}}
 
 /* ── Main content area ───────────────────────────────────── */
 #ContentArea {{
