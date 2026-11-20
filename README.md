@@ -93,4 +93,4 @@ Conrad-Categoriser/
 
 ## Lizenz
 
-Internes Werkzeug – Conrad Electronic SE.
+Dieses Projekt ist unter der [MIT-Lizenz](LICENSE) lizenziert.
